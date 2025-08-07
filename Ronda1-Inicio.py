@@ -109,85 +109,74 @@ def reiniciar_juego():
 while juegoEnEjecucion:
     temporizador.tick(FPS)
 
-    auto_rect = pygame.Rect(auto_x, auto_y, auto_ancho ,auto_alto)
-    robot_rect = pygame.Rect(robot_x, robot_y,75, 75)
-    
-    
-    if imgUAIBOT:
-        pantalla.blit(imgUAIBOT, (robot_rect))
-    if imgAUTO:
-        pantalla.blit(imgAUTO, (auto_rect))
-        
-    
-    keys = pygame.key.get_pressed()
-
-   
-
+    # EVENTOS
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             juegoEnEjecucion = False
-        if game_over:
-            if event.type == pygame.KEYDOWN:
-                 pantalla.blit(imgPerdiste, (0, 0))
-                 if event.key == pygame.K_r:
-                   reiniciar_juego()
+        if game_over and event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                reiniciar_juego()
 
-  
+    keys = pygame.key.get_pressed()
+
     if not game_over:
-      # Mover el fondo infinito horizontalmente
-      fondo_x -= fondo_velocidad
-      if fondo_x <= -PANTALLA_ANCHO:
-        fondo_x = 0
+        # Actualizar fondo
+        fondo_x -= fondo_velocidad
+        if fondo_x <= -PANTALLA_ANCHO:
+            fondo_x = 0
 
-        # Siempre dibujar el fondo, no solo cuando se reinicia
         pantalla.blit(img_fondo, (fondo_x, 0))
-        pantalla.blit(img_fondo, (fondo_x + PANTALLA_ANCHO, 0)) 
+        pantalla.blit(img_fondo, (fondo_x + PANTALLA_ANCHO, 0))
 
-        tiempoActual = (pygame.time.get_ticks()-InicioTemp // 1000)
-        tiempoActual = tiempoActual / 1000
-        tiempoActual = int(tiempoActual)
-    
-        if tiempoActual > ultimo_tiempo_segundo: 
-          km += 0.03
-          ultimo_tiempo_segundo = tiempoActual
-          km = round(km , 2)
-          print(km)
-          
+        # Actualizar kilometraje
+        tiempoActual = (pygame.time.get_ticks() - InicioTemp) // 1000
+        if tiempoActual > ultimo_tiempo_segundo:
+            km += 0.03
+            ultimo_tiempo_segundo = tiempoActual
+            km = round(km, 2)
+
+        # Movimiento del auto
         auto_x -= auto_vel_x
         if auto_x < -auto_ancho:
-            auto_x = PANTALLA_ANCHO  
+            auto_x = PANTALLA_ANCHO
 
-        robot_rect = pygame.Rect(robot_x, robot_y, robot_tamaño, robot_tamaño)
-        auto_rect = pygame.Rect(auto_x, auto_y, auto_ancho, auto_alto)
+        # Salto
+        if keys[pygame.K_SPACE] and en_suelo:
+            velocidad_y = -salto_fuerza
+            en_suelo = False
 
-    if keys[pygame.K_SPACE] and en_suelo == True : 
-        velocidad_y =- salto_fuerza
-        en_suelo = False
-        
+        # Gravedad
+        velocidad_y += gravedad
+        robot_y += velocidad_y
 
-    velocidad_y += gravedad
-    robot_y += velocidad_y
-    
-    pygame.draw.rect(pantalla, COLOR_INSTRUCCION_FONDO, fondo_rect)
-    txtKm = font_TxtInstrucciones.render(f"KM: {km:.2f}", True, COLOR_BLANCO)
-    pantalla.blit(txtKm, (PANTALLA_ANCHO - 200, 10))
-    pantalla.blit(txtInstrucciones, txtInstrucciones_rect)
-
-    if robot_y >= PISO_POS_Y - robot_tamaño:
+        if robot_y >= PISO_POS_Y - robot_tamaño:
             robot_y = PISO_POS_Y - robot_tamaño
             velocidad_y = 0
             en_suelo = True
-    if robot_rect.colliderect(auto_rect):
-        game_over = True
+
+        # Colisiones
+        robot_rect = pygame.Rect(robot_x, robot_y, robot_tamaño, robot_tamaño)
+        auto_rect = pygame.Rect(auto_x, auto_y, auto_ancho, auto_alto)
+
+        if robot_rect.colliderect(auto_rect):
+            game_over = True
+
+    # DIBUJAR ELEMENTOS
+    pantalla.blit(imgUAIBOT, (robot_x, robot_y))
+    pantalla.blit(imgAUTO, (auto_x, auto_y))
+
+    pygame.draw.rect(pantalla, COLOR_INSTRUCCION_FONDO, fondo_rect)
+    pantalla.blit(txtInstrucciones, txtInstrucciones_rect)
+    txtKm = font_TxtInstrucciones.render(f"KM: {km:.2f}", True, COLOR_BLANCO)
+    pantalla.blit(txtKm, (PANTALLA_ANCHO - 200, 10))
 
     if game_over:
         if imgPerdiste:
             pantalla.blit(imgPerdiste, (0, 0))
         pantalla.blit(txtGameOver, txtGameOver_rect)
 
-
-    
     pygame.display.flip()
+
 
 
 
