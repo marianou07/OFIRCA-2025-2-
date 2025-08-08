@@ -6,7 +6,7 @@ import os
 
 pygame.init()
 
-RUTA_ARCHIVO_FONDO = "fondo.jpeg" 
+RUTA_ARCHIVO_FONDO = "fondo.jpg" 
 RUTA_ARCHIVO_UAIBOT =  "UAIBOT.png"
 RUTA_ARCHIVO_AUTO= "auto.png"
 RUTA_IMG_PAQUETE = "imgPaquete.png"
