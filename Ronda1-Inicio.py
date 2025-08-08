@@ -1,7 +1,7 @@
 import pygame
 import sys
 import os
-
+import random
 
 
 pygame.init()
@@ -19,12 +19,23 @@ COLOR_INSTRUCCION_FONDO = (50, 50, 50)
 PANTALLA_ANCHO = 1280
 PANTALLA_ALTO = 720
 PISO_POS_Y = 450
-temporizador = pygame.time.Clock()
+clock = pygame.time.Clock()
 FPS = 60
-ultimo_tiempo_segundo = 0
-ultimoKm = -1
-InicioTemp=pygame.time.get_ticks()
-    
+
+
+  
+# Tiempo
+TIEMPO_MAX = 60 #segundos
+tiempo_restante = TIEMPO_MAX
+timer_event = pygame.USEREVENT + 1
+pygame.time.set_timer(timer_event, 1000)
+
+# Dificultad
+dificultad = 1  # 1: fácil, 2: media, 3: difícil
+auto_vel_x = 8
+autos = []
+
+
 pantalla = pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
 pygame.display.set_caption("OFIRCA 2025 - Ronda 1 Inicio")
 imgPerdiste = pygame.image.load("imgPerdiste.png")
@@ -36,6 +47,15 @@ gravedad = 1
 salto_fuerza = 25
 fondo_x = 0 
 fondo_velocidad = 2  
+en_suelo = True 
+victoria = False
+game_over = False
+
+
+# Kilómetros
+KM_TOTAL = 1.0
+km_restantes = KM_TOTAL
+km_por_segundo = 0.03
 
 
 #IMAGENES
@@ -75,8 +95,7 @@ fondo_rect = pygame.Rect(txtInstrucciones_rect.left - txtInstrucciones_desplazam
 
 font_TxtGameOver = pygame.font.SysFont(None, 100)
 txtGameOver = font_TxtGameOver.render("JUEGO TERMINADO", True, COLOR_ROJO)
-txtGameOver_rect = txtGameOver.get_rect(center=(PANTALLA_ANCHO // 2, (PANTALLA_ALTO // 2)-200))
-
+font_timer = pygame.font.SysFont(None, 50)
 
 #VARIABLES TAMAÑOS
 robot_tamaño = 150
@@ -94,36 +113,61 @@ juegoEnEjecucion = True
 game_over = False
 en_suelo = True
 
-#VARIABLE DE KILOMETRAJE
-km = 0
 
+# Crear auto
+def crear_auto():
+    y = PISO_POS_Y - 80
+    x = PANTALLA_ANCHO + random.randint(0, 500)
+    return pygame.Rect(x, y, 80, 80)
+
+autos = [crear_auto()]
 
 #FUNCION PARA REINICIAR EL JUEGO
 
 def reiniciar_juego():
-    global robot_x, robot_y, velocidad_y, en_suelo, auto_x, game_over, fondo_x, km
-    robot_x = 100
+    global robot_y, velocidad_y, en_suelo, game_over, victoria, tiempo_restante, km_restantes, autos
     robot_y = PISO_POS_Y - robot_tamaño
     velocidad_y = 0
     en_suelo = True
-    auto_x = PANTALLA_ANCHO
-    fondo_x = 0
-    km = 0 
     game_over = False
+    victoria = False
+    tiempo_restante = TIEMPO_MAX
+    km_restantes = KM_TOTAL
+    autos = [crear_auto()]
 
+reiniciar_juego()
 
 
 while juegoEnEjecucion:
-    temporizador.tick(FPS)
+    clock.tick(FPS)
 
-    # EVENTOS
+
+    # ======== EVENTOS ========
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             juegoEnEjecucion = False
-        if game_over and event.type == pygame.KEYDOWN:
+
+        if event.type == timer_event and not game_over and not victoria:
+            tiempo_restante -= 1
+            km_restantes = max(0, km_restantes - km_por_segundo)
+            if tiempo_restante <= 0:
+                game_over = True
+            if km_restantes <= 0:
+                victoria = True
+
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 reiniciar_juego()
-
+            elif event.key == pygame.K_1:
+                dificultad = 1
+                auto_vel_x = 8
+            elif event.key == pygame.K_2:
+                dificultad = 2
+                auto_vel_x = 12
+            elif event.key == pygame.K_3:
+                dificultad = 3
+                auto_vel_x = 15
+                
     keys = pygame.key.get_pressed()
 
     if not game_over:
@@ -134,13 +178,21 @@ while juegoEnEjecucion:
 
         pantalla.blit(img_fondo, (fondo_x, 0))
         pantalla.blit(img_fondo, (fondo_x + PANTALLA_ANCHO, 0))
+        
+        for auto in autos:
+            pantalla.blit(imgAUTO, auto)
+        # Barra de tiempo
+        pygame.draw.rect(pantalla, COLOR_ROJO, (20, 20, 300, 30))  
+        barra_ancho = max(0, int((tiempo_restante / TIEMPO_MAX) * 300))
+        pygame.draw.rect(pantalla, COLOR_VERDE, (20, 20, barra_ancho, 30))
+        # Texto tiempo
+        tiempo_texto = font_timer.render(f"Tiempo: {tiempo_restante}", True, COLOR_BLANCO)
+        pantalla.blit(tiempo_texto, (340, 15))
+        # Kilómetros restantes
+        km_texto = font_timer.render(f"Km restantes: {km_restantes:.2f}", True, COLOR_BLANCO)
+        pantalla.blit(km_texto, (20, 60))
+      
 
-        # Actualizar kilometraje
-        tiempoActual = (pygame.time.get_ticks() - InicioTemp) // 1000
-        if tiempoActual > ultimo_tiempo_segundo:
-            km += 0.03
-            ultimo_tiempo_segundo = tiempoActual
-            km = round(km, 2)
 
         # Movimiento del auto
         auto_x -= auto_vel_x
@@ -160,37 +212,55 @@ while juegoEnEjecucion:
             robot_y = PISO_POS_Y - robot_tamaño
             velocidad_y = 0
             en_suelo = True
-
-        # Colisiones
-        robot_rect = pygame.Rect(robot_x, robot_y, robot_tamaño, robot_tamaño)
-        auto_rect = pygame.Rect(auto_x, auto_y, auto_ancho, auto_alto)
-
-        if robot_rect.colliderect(auto_rect):
-            game_over = True
-        
-        
-        if int(km) > ultimoKm:
-            ultimoKm = int(km)
-            pantalla.blit(imgPaquete,(0,0))
             
-    # DIBUJAR ELEMENTOS
-    pantalla.blit(imgUAIBOT, (robot_x, robot_y))
-    pantalla.blit(imgAUTO, (auto_x, auto_y))
+        
+    if not game_over and not victoria:
+        # Mover autos
+        for auto in autos:
+            auto.x -= auto_vel_x
+            if auto.x < -auto.width:
+                auto.x = PANTALLA_ANCHO + random.randint(0, 500)
+        
+        # Dificultad: más autos
+        if dificultad >= 2 and len(autos) < 2:
+            autos.append(crear_auto())
+        if dificultad == 3 and len(autos) < 3:
+            autos.append(crear_auto())
 
-    pygame.draw.rect(pantalla, COLOR_INSTRUCCION_FONDO, fondo_rect)
-    pantalla.blit(txtInstrucciones, txtInstrucciones_rect)
-    txtKm = font_TxtInstrucciones.render(f"KM: {km:.2f}", True, COLOR_BLANCO)
-    pantalla.blit(txtKm, (PANTALLA_ANCHO - 200, 10))
 
-    if game_over:
+        # Colisión
+        robot_rect = pygame.Rect(robot_x, robot_y, robot_tamaño, robot_tamaño)
+        for auto in autos:
+            if robot_rect.colliderect(auto):
+                game_over = True
+        
+        
+     # ======== DIBUJO ========
+    if not game_over and not victoria:
+        # Robot
+        pantalla.blit(imgUAIBOT, (robot_x, robot_y))
+        # Autos
+        for auto in autos:
+            pantalla.blit(imgAUTO, auto)
+        # Barra de tiempo
+        pygame.draw.rect(pantalla, COLOR_ROJO, (20, 20, 300, 30))  
+        barra_ancho = max(0, int((tiempo_restante / TIEMPO_MAX) * 300))
+        pygame.draw.rect(pantalla, COLOR_VERDE, (20, 20, barra_ancho, 30))
+        # Texto tiempo
+        tiempo_texto = font_timer.render(f"Tiempo: {tiempo_restante}", True, COLOR_BLANCO)
+        pantalla.blit(tiempo_texto, (340, 15))
+        # Kilómetros restantes
+        km_texto = font_timer.render(f"Km restantes: {km_restantes:.2f}", True, COLOR_BLANCO)
+        pantalla.blit(km_texto, (20, 60))
+    elif game_over:
         if imgPerdiste:
             pantalla.blit(imgPerdiste, (0, 0))
-        pantalla.blit(txtGameOver, txtGameOver_rect)
+        pantalla.blit(txtGameOver, txtGameOver.get_rect(center=(PANTALLA_ANCHO // 2, 460 )))
+    elif victoria:
+        pantalla.blit(imgPaquete, (0,0))
+        #frenar fondo
+        fondo_velocidad = 0
 
     pygame.display.flip()
-
-
-
-
 pygame.quit()
 sys.exit()
