@@ -9,6 +9,7 @@ pygame.init()
 RUTA_ARCHIVO_FONDO = "fondo.jpeg" 
 RUTA_ARCHIVO_UAIBOT =  "UAIBOT.png"
 RUTA_ARCHIVO_AUTO= "auto.png"
+RUTA_IMG_PAQUETE = "imgPaquete.png"
 COLOR_BLANCO = (255, 255, 255)
 COLOR_NEGRO = (0, 0, 0)
 COLOR_ROJO = (200, 0, 0)
@@ -21,6 +22,7 @@ PISO_POS_Y = 450
 temporizador = pygame.time.Clock()
 FPS = 60
 ultimo_tiempo_segundo = 0
+ultimoKm = -1
 InicioTemp=pygame.time.get_ticks()
     
 pantalla = pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
@@ -45,6 +47,10 @@ if os.path.exists(RUTA_ARCHIVO_UAIBOT):
     imgUAIBOT = pygame.image.load(RUTA_ARCHIVO_UAIBOT)
     imgUAIBOT = pygame.transform.scale(imgUAIBOT, (150, 150))  
 
+if os.path.exists(RUTA_IMG_PAQUETE):
+    imgPaquete = pygame.image.load(RUTA_IMG_PAQUETE)
+    imgPaquete = pygame.transform.scale(imgPaquete, (PANTALLA_ANCHO, PANTALLA_ALTO))
+    
 if os.path.exists(RUTA_ARCHIVO_AUTO):
     imgAUTO = pygame.image.load(RUTA_ARCHIVO_AUTO)
     imgAUTO = pygame.transform.scale(imgAUTO, (200, 80)) 
@@ -95,13 +101,14 @@ km = 0
 #FUNCION PARA REINICIAR EL JUEGO
 
 def reiniciar_juego():
-    global robot_x, robot_y, velocidad_y, en_suelo, auto_x, game_over, fondo_x
+    global robot_x, robot_y, velocidad_y, en_suelo, auto_x, game_over, fondo_x, km
     robot_x = 100
     robot_y = PISO_POS_Y - robot_tamaño
     velocidad_y = 0
     en_suelo = True
     auto_x = PANTALLA_ANCHO
     fondo_x = 0
+    km = 0 
     game_over = False
 
 
@@ -160,7 +167,12 @@ while juegoEnEjecucion:
 
         if robot_rect.colliderect(auto_rect):
             game_over = True
-
+        
+        
+        if int(km) > ultimoKm:
+            ultimoKm = int(km)
+            pantalla.blit(imgPaquete,(0,0))
+            
     # DIBUJAR ELEMENTOS
     pantalla.blit(imgUAIBOT, (robot_x, robot_y))
     pantalla.blit(imgAUTO, (auto_x, auto_y))
