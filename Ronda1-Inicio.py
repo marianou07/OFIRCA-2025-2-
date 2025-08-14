@@ -6,6 +6,7 @@ import random
 
 pygame.init()
 
+# ======== CONSTANTES ========
 RUTA_ARCHIVO_FONDO = "fondo.jpg" 
 RUTA_ARCHIVO_UAIBOT =  "UAIBOT.png"
 RUTA_ARCHIVO_AUTO= "auto.png"
@@ -24,6 +25,10 @@ clock = pygame.time.Clock()
 FPS = 60
 
 
+
+# ======== VENTANA ========
+pantalla = pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
+pygame.display.set_caption("OFIRCA 2025 - Ronda 1 Inicio")
   
 # Tiempo
 TIEMPO_MAX = 60 #segundos
@@ -31,18 +36,19 @@ tiempo_restante = TIEMPO_MAX
 timer_event = pygame.USEREVENT + 1
 pygame.time.set_timer(timer_event, 1000)
 
+# Kilómetros
+KM_TOTAL = 1.0
+km_restantes = KM_TOTAL
+km_por_segundo = 0.03
+
 # Dificultad
 dificultad = 1  # 1: fácil, 2: media, 3: difícil
 auto_vel_x = 8
 autos = []
 
 
-pantalla = pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
-pygame.display.set_caption("OFIRCA 2025 - Ronda 1 Inicio")
-imgPerdiste = pygame.image.load("imgPerdiste.png")
 
-
-#VARIABLES FUERZA DE SALTO, VELOCIDAD DE FONDO Y GRAVEDAD
+# ======== VARIABLES DE JUEGO ========
 velocidad_y = 0
 gravedad = 1
 salto_fuerza = 25
@@ -53,13 +59,8 @@ victoria = False
 game_over = False
 
 
-# Kilómetros
-KM_TOTAL = 1.0
-km_restantes = KM_TOTAL
-km_por_segundo = 0.03
 
-
-#IMAGENES
+# ======== CARGA DE IMÁGENES ========
 if os.path.exists(RUTA_INTRO):
     img_intro = pygame.image.load(RUTA_INTRO)
     img_intro = pygame.transform.scale(img_intro, (PANTALLA_ANCHO, PANTALLA_ALTO))
@@ -87,7 +88,7 @@ if os.path.exists("imgPerdiste.png"):
 else:
     imgPerdiste = None  # Para prevenir errores si no existe
 
-#TEXTOS
+#FUENTES
 font_TxtInstrucciones = pygame.font.SysFont(None, 36)
 txtInstrucciones = font_TxtInstrucciones.render("Usa la barra espaciadora para saltar", True, COLOR_BLANCO)
 txtInstrucciones_desplazamiento = 10
@@ -133,7 +134,7 @@ autos = [crear_auto()]
 #FUNCION PARA REINICIAR EL JUEGO
 
 def reiniciar_juego():
-    global robot_y, velocidad_y, en_suelo, game_over, victoria, tiempo_restante, km_restantes, autos
+    global robot_y, velocidad_y, en_suelo, game_over, victoria, tiempo_restante, km_restantes, autos, fondo_velocidad
     robot_y = PISO_POS_Y - robot_tamaño
     velocidad_y = 0
     en_suelo = True
@@ -142,6 +143,12 @@ def reiniciar_juego():
     tiempo_restante = TIEMPO_MAX
     km_restantes = KM_TOTAL
     autos = [crear_auto()]
+    if dificultad == 3 :
+        fondo_velocidad = 27
+    elif dificultad == 2 : 
+        fondo_velocidad = 17
+    elif dificultad ==  1:
+        fondo_velocidad = 8
 
 reiniciar_juego()
 
@@ -187,13 +194,16 @@ while juegoEnEjecucion:
                     reiniciar_juego()
                 elif event.key == pygame.K_1:
                     dificultad = 1
-                    auto_vel_x = 8
+                    auto_vel_x = 12
+                    fondo_velocidad = 7
                 elif event.key == pygame.K_2:
                     dificultad = 2
-                    auto_vel_x = 12
+                    auto_vel_x = 22
+                    fondo_velocidad = 17
                 elif event.key == pygame.K_3:
                     dificultad = 3
-                    auto_vel_x = 15
+                    auto_vel_x = 31
+                    fondo_velocidad = 24
                     
 
     if not game_over:
@@ -222,7 +232,7 @@ while juegoEnEjecucion:
 
             # Movimiento del auto
             auto_x -= auto_vel_x
-            if auto_x < -auto_ancho:
+            if auto_x < -auto_ancho:    
                 auto_x = PANTALLA_ANCHO
 
             # Salto
@@ -247,11 +257,7 @@ while juegoEnEjecucion:
                 if auto.x < -auto.width:
                     auto.x = PANTALLA_ANCHO + random.randint(0, 500)
             
-            # Dificultad: más autos
-            if dificultad >= 2 and len(autos) < 2:
-                autos.append(crear_auto())
-            if dificultad == 3 and len(autos) < 3:
-                autos.append(crear_auto())
+
 
 
             # Colisión
