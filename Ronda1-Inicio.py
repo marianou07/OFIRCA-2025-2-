@@ -72,21 +72,21 @@ if os.path.exists(RUTA_ARCHIVO_FONDO):
 if os.path.exists(RUTA_ARCHIVO_UAIBOT):
     imgUAIBOT = pygame.image.load(RUTA_ARCHIVO_UAIBOT)
     imgUAIBOT = pygame.transform.scale(imgUAIBOT, (150, 150))  
-
-if os.path.exists(RUTA_IMG_PAQUETE):
-    imgPaquete = pygame.image.load(RUTA_IMG_PAQUETE)
-    imgPaquete = pygame.transform.scale(imgPaquete, (PANTALLA_ANCHO, PANTALLA_ALTO))
     
 if os.path.exists(RUTA_ARCHIVO_AUTO):
     imgAUTO = pygame.image.load(RUTA_ARCHIVO_AUTO)
     imgAUTO = pygame.transform.scale(imgAUTO, (200, 80)) 
+    
+if os.path.exists(RUTA_IMG_PAQUETE):
+    imgPaquete = pygame.image.load(RUTA_IMG_PAQUETE)
+    imgPaquete = pygame.transform.scale(imgPaquete, (PANTALLA_ANCHO, PANTALLA_ALTO))
 
 # Carga y escalado de la imagen de "perdiste"
 if os.path.exists("imgPerdiste.png"):
     imgPerdiste = pygame.image.load("imgPerdiste.png")
     imgPerdiste = pygame.transform.scale(imgPerdiste, (PANTALLA_ANCHO, PANTALLA_ALTO))
 else:
-    imgPerdiste = None  # Para prevenir errores si no existe
+    imgPerdiste = None  
 
 #FUENTES
 font_TxtInstrucciones = pygame.font.SysFont(None, 36)
@@ -94,11 +94,6 @@ txtInstrucciones = font_TxtInstrucciones.render("Usa la barra espaciadora para s
 txtInstrucciones_desplazamiento = 10
 txtInstrucciones_rect = txtInstrucciones.get_rect()
 txtInstrucciones_rect.topleft = (10, 10)
-fondo_rect = pygame.Rect(txtInstrucciones_rect.left - txtInstrucciones_desplazamiento,
-                      txtInstrucciones_rect.top - txtInstrucciones_desplazamiento,
-                      txtInstrucciones_rect.width + 2 * txtInstrucciones_desplazamiento,
-                      txtInstrucciones_rect.height + 2 * txtInstrucciones_desplazamiento)
-
 font_TxtGameOver = pygame.font.SysFont(None, 100)
 txtGameOver = font_TxtGameOver.render("JUEGO TERMINADO", True, COLOR_ROJO)
 font_timer = pygame.font.SysFont(None, 50)
@@ -202,7 +197,7 @@ while juegoEnEjecucion:
                     fondo_velocidad = 17
                 elif event.key == pygame.K_3:
                     dificultad = 3
-                    auto_vel_x = 31
+                    auto_vel_x = 32
                     fondo_velocidad = 24
                     
 
